@@ -23,12 +23,17 @@ func CtxOpSpan(child log.CtxOp) log.CtxOp {
 
 func CtxOpAddAttributes(child log.CtxOp) log.CtxOp {
 	return func(ctx context.Context, e *log.Event) *log.Event {
-		for _, a := range FromCtx(ctx) {
-			e = a.ToEvent(e)
-		}
+		e = AddToLogEvent(e, FromCtx(ctx))
 		if child != nil {
 			return child(ctx, e)
 		}
 		return e
 	}
+}
+
+func AddToLogEvent(e *log.Event, attrs []Attribute) *log.Event {
+	for _, a := range attrs {
+		e = a.ToEvent(e)
+	}
+	return e
 }

@@ -20,27 +20,27 @@ func Logger(ctx context.Context) TraceLogger {
 	}
 }
 
-func (t TraceLogger) Trace() *Event {
-	return t.mkEvent(t.logger.TraceCtx(t.ctx))
+func (l TraceLogger) Trace() *Event {
+	return l.mkEvent(l.logger.TraceCtx(l.ctx))
 }
 
-func (t TraceLogger) Info() *Event {
-	return t.mkEvent(t.logger.InfoCtx(t.ctx))
+func (l TraceLogger) Info() *Event {
+	return l.mkEvent(l.logger.InfoCtx(l.ctx))
 }
 
-func (t TraceLogger) Warn() *Event {
-	return t.mkEvent(t.logger.WarnCtx(t.ctx))
+func (l TraceLogger) Warn() *Event {
+	return l.mkEvent(l.logger.WarnCtx(l.ctx))
 }
 
-func (t TraceLogger) Error() *Event {
-	return t.mkEvent(t.logger.ErrorCtx(t.ctx))
+func (l TraceLogger) Error() *Event {
+	return l.mkEvent(l.logger.ErrorCtx(l.ctx))
 }
 
-func (t TraceLogger) mkEvent(e *log.Event) *Event {
+func (l TraceLogger) mkEvent(e *log.Event) *Event {
 	return &Event{
 		e:     e,
-		attrs: attr.KeyValueFromCtx(t.ctx),
-		span:  trace.SpanFromContext(t.ctx),
+		attrs: attr.KeyValueFromCtx(l.ctx),
+		span:  trace.SpanFromContext(l.ctx),
 	}
 }
 
@@ -48,6 +48,20 @@ type Event struct {
 	e     *log.Event
 	attrs []attribute.KeyValue
 	span  trace.Span
+}
+
+func (e *Event) Attrs(attrs []attr.Attribute) *Event {
+	e.e = attr.AddToLogEvent(e.e, attrs)
+	for _, a := range attrs {
+		e.attrs = append(e.attrs, a.ToAttribute())
+	}
+	return e
+}
+
+func (e *Event) Attr(a attr.Attribute) *Event {
+	e.e = a.ToEvent(e.e)
+	e.attrs = append(e.attrs, a.ToAttribute())
+	return e
 }
 
 func (e *Event) Int(name string, value int) *Event {
@@ -59,6 +73,12 @@ func (e *Event) Int(name string, value int) *Event {
 func (e *Event) Str(name, value string) *Event {
 	e.e = e.e.Str(name, value)
 	e.attrs = append(e.attrs, attribute.String(name, value))
+	return e
+}
+
+func (e *Event) Err(err error) *Event {
+	e.e = e.e.Err(err)
+	e.attrs = append(e.attrs, attribute.String("error", err.Error()))
 	return e
 }
 
