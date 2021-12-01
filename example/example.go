@@ -13,11 +13,12 @@ import (
 func main() {
 	fmt.Println("\nLogging example:")
 
-	logger, _ := log.NewLogWrapper()
+	logger, _ := log.New()
 	logger = logger.WithCtxOp(attr.CtxOpSpan(attr.CtxOpAddAttributes(logger.CtxOp())))
 
 	ctx := context.Background()
-	ctx = attr.AddToCtx(ctx, attr.Str("string1", "string1 value"))
+	ctx = attr.AddToCtx(ctx,
+		attr.Str("string1", "string1 value"))
 
 	logger.InfoCtx(ctx).
 		Str("another", "value").
