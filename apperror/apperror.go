@@ -3,6 +3,7 @@ package apperror
 import (
 	"errors"
 	"github.com/mdev5000/logconcept/attr"
+	"github.com/mdev5000/logconcept/internalerr"
 )
 
 const CodeInternal = 0
@@ -42,8 +43,14 @@ func (ae *AppError) Error() string {
 	return ae.Err.Error()
 }
 
-func InternalErrS(errMsg string, attrs ...attr.Attribute) error {
-	return InternalErr(errors.New(errMsg), attrs...)
+func InternalErrS(includeStack bool, errMsg string, attrs ...attr.Attribute) error {
+	var err error
+	if includeStack {
+		err = internalerr.StackErrF(errMsg)
+	} else {
+		err = errors.New(errMsg)
+	}
+	return InternalErr(err, attrs...)
 }
 
 func InternalErr(err error, attrs ...attr.Attribute) error {

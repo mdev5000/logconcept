@@ -1,19 +1,23 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/mdev5000/logconcept/apperror"
 	"github.com/mdev5000/logconcept/attr"
+	"github.com/mdev5000/logconcept/internalerr"
 	"github.com/mdev5000/logconcept/log"
 	"github.com/mdev5000/logconcept/operations"
+	"os"
 )
 
 func main() {
 	fmt.Println("\nLogging example:")
 
-	logger, _ := log.New()
+	b := bytes.NewBuffer(nil)
+	logger, _ := log.New(log.WithWriter(b))
 	logger = logger.WithCtxOp(attr.CtxOpSpan(attr.CtxOpAddAttributes(logger.CtxOp())))
 
 	ctx := context.Background()
@@ -39,7 +43,8 @@ func main() {
 		Msg("another message")
 
 	fmt.Println("\nFrom errors:")
-	err = apperror.InternalErrS("some error occurred",
+	err = apperror.InternalErrS(true,
+		"some error occurred",
 		attr.Str("errStr", "err string value"),
 	)
 	operations.Logger(ctx).AppError(err)
@@ -51,4 +56,15 @@ func main() {
 		attr.Int("num fails", 6),
 	)
 	operations.Logger(ctx).AppError(err)
+
+	err = internalerr.StackErrF("some error %s", "arg")
+	err = apperror.InternalErr(err, attr.Int("someVal", 5))
+	operations.Logger(ctx).AppError(err)
+
+	logData := b.Bytes()
+	fmt.Println(string(logData))
+
+	if err := os.WriteFile("example.log", logData, 0775); err != nil {
+		panic(err)
+	}
 }

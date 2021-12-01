@@ -2,6 +2,7 @@ package operations
 
 import (
 	"github.com/mdev5000/logconcept/apperror"
+	"github.com/mdev5000/logconcept/internalerr"
 )
 
 func (l TraceLogger) AppError(err error) {
@@ -20,8 +21,14 @@ func (l TraceLogger) AppError(err error) {
 		e = l.Info()
 	}
 
-	e.Attrs(ae.Attr).
+	e = e.Attrs(ae.Attr).
 		Err(ae.Err).
-		Int("code", ae.Code).
-		Msg(msg)
+		Int("code", ae.Code)
+
+	stack := internalerr.Stack(ae.Err)
+	if stack != "" {
+		e = e.Str("stack", stack)
+	}
+
+	e.Msg(msg)
 }
