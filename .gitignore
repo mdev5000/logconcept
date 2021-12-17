@@ -1,6 +1,8 @@
 # ignored files
 .DS_Store
 *.swp
+escape.txt
+*.log
 
 # ignored folders
 /.idea/
